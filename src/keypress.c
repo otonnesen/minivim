@@ -27,9 +27,11 @@ void process_key(void) {
 
 	switch (c) {
 	case CTRL_KEY('q'):
+		clear_screen();
 		exit(0);
 		break;
 	case CTRL_KEY('c'):
 		refresh_screen();
+		break;
 	}
 }

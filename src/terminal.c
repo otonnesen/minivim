@@ -24,19 +24,13 @@ void enable_raw_mode(void) {
 	atexit(disable_raw_mode);
 
 	struct termios raw = orig_termios;
-	// Disable echo
-	raw.c_lflag &= ~(ECHO);
-	// Disable canonical mode
-	raw.c_lflag &= ~(ICANON);
-	// Disable input processing
-	raw.c_lflag &= ~(IEXTEN);
-	// Disable quit/interrupt/etc signals
-	raw.c_lflag &= ~(ISIG);
-	// Disable xon/xoff
-	raw.c_iflag &= ~(IXON);
-	// Disable CR/NL translation
-	raw.c_iflag &= ~(ICRNL);
-	raw.c_oflag &= ~(OPOST);
+	raw.c_lflag &= ~(ECHO); // Disable echo
+	raw.c_lflag &= ~(ICANON); // Disable canonical mode
+	raw.c_lflag &= ~(IEXTEN); // Disable input processing
+	raw.c_lflag &= ~(ISIG); // Disable quit/interrupt/etc signals
+	raw.c_iflag &= ~(IXON); // Disable xon/xoff
+	raw.c_iflag &= ~(ICRNL); // Disable CR/NL translation
+	raw.c_oflag &= ~(OPOST); // Disable output processing (NL/CR translation)
 
 	// Legacy, maybe not necessary
 	raw.c_iflag &= ~(BRKINT | INPCK | ISTRIP);
@@ -46,7 +40,15 @@ void enable_raw_mode(void) {
 		die("tcsetattr");
 }
 
-void refresh_screen(void) {
+void clear_screen(void) {
 	write(STDOUT_FILENO, "\x1b[2J", 4);
+	write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
+void refresh_screen(void) {
+	clear_screen();
+
+	/* draw_something(); */
+
+	write(STDOUT_FILENO, "\x1b[H", 3);
+}
