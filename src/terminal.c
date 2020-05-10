@@ -1,21 +1,16 @@
-/* #include "raw.h" */
+#include "terminal.h"
 
-#include<stdio.h>
+#include "util.h"
+
 #include<stdlib.h>
 #include<termios.h>
 #include<unistd.h>
 
-/* Error handler */
-void die(const char *s) {
-	perror(s);
-	exit(1);
-}
-
 /* Default terminal attributes */
-struct termios orig_termios;
+static struct termios orig_termios;
 
 /* Resets terminal to default */
-void disable_raw_mode(void) {
+static void disable_raw_mode(void) {
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
 		die("tcsetattr");
 }
@@ -50,3 +45,8 @@ void enable_raw_mode(void) {
 	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
 		die("tcsetattr");
 }
+
+void refresh_screen(void) {
+	write(STDOUT_FILENO, "\x1b[2J", 4);
+}
+
