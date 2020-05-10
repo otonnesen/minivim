@@ -1,6 +1,12 @@
-#include "raw.c"
+/* minivim - a text editor */
 
+#include "raw.h"
+
+#include<ctype.h>
+#include<errno.h>
 #include<stdio.h>
+#include<stdlib.h>
+#include<unistd.h>
 
 int main(void) {
 	enable_raw_mode();

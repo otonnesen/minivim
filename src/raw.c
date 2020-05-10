@@ -1,5 +1,5 @@
-#include<ctype.h>
-#include<errno.h>
+/* #include "raw.h" */
+
 #include<stdio.h>
 #include<stdlib.h>
 #include<termios.h>
@@ -9,7 +9,7 @@
 void die(const char *s) {
 	perror(s);
 	exit(1);
-} 
+}
 
 /* Default terminal attributes */
 struct termios orig_termios;

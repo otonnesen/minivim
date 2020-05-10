@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -O -Wall -Wextra -pedantic -std=c99
 
-TARGETS = minivim
+TARGETS = minivim raw keypress
 
 SRC = $(patsubst %,obj/%.o,$(TARGETS))
 
