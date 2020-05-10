@@ -20,7 +20,6 @@ int main(void) {
 			break;
 		}
 	}
-	disable_raw_mode();
 
 	return 0;
 }
