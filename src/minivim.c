@@ -2,7 +2,7 @@
 
 #include<stdio.h>
 
-int main() {
+int main(void) {
 	enable_raw_mode();
 	char c;
 	for (;;) {
