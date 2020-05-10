@@ -16,16 +16,15 @@ struct termios orig_termios;
 
 /* Resets terminal to default */
 void disable_raw_mode(void) {
-	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1) {
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
 		die("tcsetattr");
-	}
 }
 
 /* Sets terminal to non-canonical mode */
 void enable_raw_mode(void) {
-	if (tcgetattr(STDIN_FILENO, &orig_termios) == -1) {
+	if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
 		die("tcgetattr");
-	}
+
 	// Disable raw mode on exit
 	atexit(disable_raw_mode);
 
@@ -48,7 +47,6 @@ void enable_raw_mode(void) {
 	raw.c_iflag &= ~(BRKINT | INPCK | ISTRIP);
 	raw.c_cflag |= (CS8);
 
-	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1) {
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &raw) == -1)
 		die("tcsetattr");
-	}
 }

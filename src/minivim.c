@@ -12,19 +12,16 @@ int main(void) {
 	enable_raw_mode();
 	char c;
 	for (;;) {
-		if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN) {
+		if (read(STDIN_FILENO, &c, 1) == -1 && errno != EAGAIN)
 			die("read");
-		}
 
-		if (iscntrl(c)) {
+		if (iscntrl(c))
 			printf("%d\r\n", c);
-		} else {
+		else
 			printf("%c\r\n", c);
-		}
 
-		if (c == 'q') {
+		if (c == 'q')
 			break;
-		}
 	}
 
 	return 0;
