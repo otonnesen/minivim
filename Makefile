@@ -1,5 +1,5 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -pedantic -std=c99
+CFLAGS = -O -Wall -Wextra -pedantic -std=c99
 
 TARGETS = minivim
 
