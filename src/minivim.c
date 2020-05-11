@@ -9,6 +9,7 @@ int main(void) {
 	init_editor();
 
 	for (;;) {
+		refresh_screen();
 		process_key();
 	}
 

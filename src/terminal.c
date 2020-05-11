@@ -1,5 +1,6 @@
 #include "terminal.h"
 
+#include "buffer.h"
 #include "config.h"
 #include "util.h"
 
@@ -39,15 +40,30 @@ void enable_raw_mode(void) {
 		die("tcsetattr");
 }
 
+static void draw_tildes_buf(str_buf_t *sb) {
+	for (int i = 0; i < E.rows; i++) {
+		str_buf_append(sb, "~\r\n", 3);
+	}
+	str_buf_append(sb, "~", 1);
+}
+
+static void clear_screen_buf(str_buf_t *sb) {
+	str_buf_append(sb, "\x1b[2J", 4);
+	str_buf_append(sb, "\x1b[H", 3);
+}
+
 void clear_screen(void) {
 	write(STDOUT_FILENO, "\x1b[2J", 4);
 	write(STDOUT_FILENO, "\x1b[H", 3);
 }
 
 void refresh_screen(void) {
-	clear_screen();
+	str_buf_t sb = BUF_INIT;
 
-	/* draw_something(); */
+	clear_screen_buf(&sb);
 
-	write(STDOUT_FILENO, "\x1b[H", 3);
+	draw_tildes_buf(&sb);
+
+	write(STDOUT_FILENO, sb.buf, sb.len);
+	str_buf_free(&sb);
 }
