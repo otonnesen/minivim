@@ -13,6 +13,7 @@
 static void draw_tildes_buf(str_buf_t *sb) {
 	for (int i = 0; i < E.rows; i++) {
 		str_buf_append(sb, "~\r\n", 3);
+		str_buf_append(sb, "\x1b[K", 3);
 	}
 	str_buf_append(sb, "~", 1);
 }
@@ -26,7 +27,6 @@ void refresh_screen(void) {
 	str_buf_t sb = BUF_INIT;
 
 	str_buf_append(&sb, "\x1b[?25l", 6); /* Hide cursor */
-	str_buf_append(&sb, "\x1b[2J", 4); /* Clear screen */
 	str_buf_append(&sb, "\x1b[H", 3); /* Reset cursor position */
 
 	draw_tildes_buf(&sb);
