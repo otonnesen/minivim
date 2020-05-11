@@ -1,3 +1,8 @@
+/*
+ * 'buffer.c' implements a dynamically allocated string buffer for use
+ * when writing to the terminal.
+ */
+
 #include "buffer.h"
 
 #include<stdlib.h>

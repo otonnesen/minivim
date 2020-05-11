@@ -9,6 +9,7 @@ struct editor_config {
 	struct termios orig_termios;
 };
 
+/* Global state variable */
 extern struct editor_config E;
 
 void init_editor(void);

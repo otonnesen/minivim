@@ -1,3 +1,8 @@
+/*
+ * 'config.c' adds the 'editor_config' struct to hold global state and
+ * implements several helper methods to use with it.
+ */
+
 #include "config.h"
 
 #include "util.h"

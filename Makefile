@@ -1,7 +1,7 @@
 CC = gcc
 CFLAGS = -O -Wall -Wextra -pedantic -std=c99
 
-TARGETS = buffer config keypress minivim terminal util
+TARGETS = buffer config minivim terminal util draw
 
 SRC = $(patsubst %,obj/%.o,$(TARGETS))
 
