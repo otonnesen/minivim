@@ -20,19 +20,23 @@ void enable_raw_mode(void) {
 	if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
 		die("tcgetattr");
 
-	// Disable raw mode on exit
+	/* Disable raw mode on exit */
 	atexit(disable_raw_mode);
 
 	struct termios raw = E.orig_termios;
-	raw.c_lflag &= ~(ECHO); // Disable echo
-	raw.c_lflag &= ~(ICANON); // Disable canonical mode
-	raw.c_lflag &= ~(IEXTEN); // Disable input processing
-	raw.c_lflag &= ~(ISIG); // Disable quit/interrupt/etc signals
-	raw.c_iflag &= ~(IXON); // Disable xon/xoff
-	raw.c_iflag &= ~(ICRNL); // Disable CR/NL translation
-	raw.c_oflag &= ~(OPOST); // Disable output processing (NL/CR translation)
+	/*
+	 * Disable echo, canonical mode, input processing, and quit/interrupt
+	 * signal processing.
+	 */
+	raw.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 
-	// Legacy, maybe not necessary
+	/* Disable xon/xoff, CR/NL translation */
+	raw.c_iflag &= ~(IXON | ICRNL);
+
+	/* Disable output processing (NL/CR translation) */
+	raw.c_oflag &= ~(OPOST);
+
+	/* Legacy, maybe not necessary */
 	raw.c_iflag &= ~(BRKINT | INPCK | ISTRIP);
 	raw.c_cflag |= (CS8);
 
@@ -47,11 +51,6 @@ static void draw_tildes_buf(str_buf_t *sb) {
 	str_buf_append(sb, "~", 1);
 }
 
-static void clear_screen_buf(str_buf_t *sb) {
-	str_buf_append(sb, "\x1b[2J", 4);
-	str_buf_append(sb, "\x1b[H", 3);
-}
-
 void clear_screen(void) {
 	write(STDOUT_FILENO, "\x1b[2J", 4);
 	write(STDOUT_FILENO, "\x1b[H", 3);
@@ -60,9 +59,14 @@ void clear_screen(void) {
 void refresh_screen(void) {
 	str_buf_t sb = BUF_INIT;
 
-	clear_screen_buf(&sb);
+	str_buf_append(&sb, "\x1b[?25l", 6); /* Hide cursor */
+	str_buf_append(&sb, "\x1b[2J", 4); /* Clear screen */
+	str_buf_append(&sb, "\x1b[H", 3); /* Reset cursor position */
 
 	draw_tildes_buf(&sb);
+
+	str_buf_append(&sb, "\x1b[H", 3); /* Reset cursor position */
+	str_buf_append(&sb, "\x1b[?25h", 6); /* Show cursor */
 
 	write(STDOUT_FILENO, sb.buf, sb.len);
 	str_buf_free(&sb);
