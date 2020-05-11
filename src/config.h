@@ -10,8 +10,8 @@ struct editor_config {
 };
 
 /* Global state variable */
-extern struct editor_config E;
+extern struct editor_config EDITOR_CONFIG;
 
-void init_editor(void);
+void init_config(void);
 
 #endif

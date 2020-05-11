@@ -10,7 +10,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
-struct editor_config E = {0};
+struct editor_config EDITOR_CONFIG = {0};
 
 static int get_window_size(int *rows, int *cols) {
 	struct winsize ws;
@@ -24,7 +24,7 @@ static int get_window_size(int *rows, int *cols) {
 	}
 }
 
-void init_editor(void) {
-	if (get_window_size(&E.rows, &E.cols) == -1)
+void init_config(void) {
+	if (get_window_size(&EDITOR_CONFIG.rows, &EDITOR_CONFIG.cols) == -1)
 		die("get_window_size");
 }
