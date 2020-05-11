@@ -8,10 +8,12 @@
 #include "config.h"
 #include "util.h"
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+#define MINIVIM_VERSION "0.0.1"
 
 /* Handle keypress */
 void process_key(void) {
@@ -34,7 +36,23 @@ void process_key(void) {
  */
 void draw_tildes_buf(str_buf_t *sb) {
 	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
-		str_buf_append(sb, "~\r\n", 3);
+		if (i == EDITOR_CONFIG.rows / 3) {
+			char motd[80];
+			int l = snprintf(motd, sizeof(motd),
+					"Minivim -- version %s",
+					MINIVIM_VERSION);
+			if (l > EDITOR_CONFIG.cols)
+				l = EDITOR_CONFIG.cols;
+			int p = (EDITOR_CONFIG.cols - l) / 2;
+			str_buf_append(sb, "~", 1);
+			p--;
+			while (p--)
+				str_buf_append(sb, " ", 1);
+			str_buf_append(sb, motd, l);
+			str_buf_append(sb, "\r\n", 2);
+		} else {
+			str_buf_append(sb, "~\r\n", 3);
+		}
 		str_buf_append(sb, "\x1b[K", 3);
 	}
 	str_buf_append(sb, "~", 1);
