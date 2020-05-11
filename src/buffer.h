@@ -1,5 +1,6 @@
 #ifndef BUFFER_H
 #define BUFFER_H
+
 typedef struct str_buf {
 	char *buf;
 	int len;

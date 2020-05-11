@@ -7,7 +7,7 @@
 #include "terminal.h"
 #include "util.h"
 
-#include<stdlib.h>
+#include <stdlib.h>
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 

@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include<termios.h>
+#include <termios.h>
 
 struct editor_config {
 	int rows;

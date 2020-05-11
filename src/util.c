@@ -6,10 +6,10 @@
 
 #include "draw.h"
 
-#include<errno.h>
-#include<stdio.h>
-#include<stdlib.h>
-#include<unistd.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 /* Error handler */
 void die(const char *s) {

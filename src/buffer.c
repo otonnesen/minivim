@@ -5,8 +5,8 @@
 
 #include "buffer.h"
 
-#include<stdlib.h>
-#include<string.h>
+#include <stdlib.h>
+#include <string.h>
 
 void str_buf_append(str_buf_t *sb, const char *s, int len) {
 	char *new = realloc(sb->buf, sb->len + len);

@@ -8,7 +8,7 @@
 #include "buffer.h"
 #include "config.h"
 
-#include<unistd.h>
+#include <unistd.h>
 
 static void draw_tildes_buf(str_buf_t *sb) {
 	for (int i = 0; i < E.rows; i++) {

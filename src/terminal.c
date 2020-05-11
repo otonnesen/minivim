@@ -7,10 +7,10 @@
 #include "config.h"
 #include "util.h"
 
-#include<stdio.h>
-#include<stdlib.h>
-#include<termios.h>
-#include<unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <termios.h>
+#include <unistd.h>
 
 /* Resets terminal to default */
 static void disable_raw_mode(void) {

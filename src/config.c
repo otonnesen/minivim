@@ -7,8 +7,8 @@
 
 #include "util.h"
 
-#include<sys/ioctl.h>
-#include<unistd.h>
+#include <sys/ioctl.h>
+#include <unistd.h>
 
 struct editor_config E = {0};
 
