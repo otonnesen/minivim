@@ -1,29 +1,28 @@
 #include "terminal.h"
 
+#include "config.h"
 #include "util.h"
 
+#include<stdio.h>
 #include<stdlib.h>
 #include<termios.h>
 #include<unistd.h>
 
-/* Default terminal attributes */
-static struct termios orig_termios;
-
 /* Resets terminal to default */
 static void disable_raw_mode(void) {
-	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &orig_termios) == -1)
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &E.orig_termios) == -1)
 		die("tcsetattr");
 }
 
 /* Sets terminal to non-canonical mode */
 void enable_raw_mode(void) {
-	if (tcgetattr(STDIN_FILENO, &orig_termios) == -1)
+	if (tcgetattr(STDIN_FILENO, &E.orig_termios) == -1)
 		die("tcgetattr");
 
 	// Disable raw mode on exit
 	atexit(disable_raw_mode);
 
-	struct termios raw = orig_termios;
+	struct termios raw = E.orig_termios;
 	raw.c_lflag &= ~(ECHO); // Disable echo
 	raw.c_lflag &= ~(ICANON); // Disable canonical mode
 	raw.c_lflag &= ~(IEXTEN); // Disable input processing
