@@ -31,7 +31,7 @@ void process_key(void) {
 }
 
 /*
- * placeholder for 'void draw(void)' that will be implemented and handle all
+ * placeholder for 'void draw(str_buf_t*)' that will be implemented and handle all
  * drawing (eventually).
  */
 void draw_tildes_buf(str_buf_t *sb) {
@@ -59,9 +59,8 @@ void draw_tildes_buf(str_buf_t *sb) {
 }
 
 /*
- * 'refresh_screen' takes a pointer to a function that writes to a string
- * buffer and wraps it in escape sequences to clear the screen and return the
- * cursor to the correct spot.
+ * 'refresh_screen' calls the draw function and resets the cursor's position
+ * to the top right of the terminal.
  */
 void refresh_screen(void) {
 	str_buf_t sb = BUF_INIT;
