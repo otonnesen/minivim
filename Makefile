@@ -15,8 +15,8 @@ obj:
 
 .PHONY: compile
 
-compile: $(SRC)
-	$(CC) -o minivim $^ $(CFLAGS)
+compile: $(SRC) check-style
+	$(CC) -o minivim $(SRC) $(CFLAGS)
 
 .PHONY: check-style
 
