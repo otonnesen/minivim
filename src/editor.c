@@ -16,7 +16,8 @@
 #define MINIVIM_VERSION "0.0.1"
 
 /* Handle keypress */
-void process_key(void) {
+void process_key(void)
+{
 	char c = read_key();
 
 	switch (c) {
@@ -24,17 +25,15 @@ void process_key(void) {
 		clear_screen();
 		exit(0);
 		break;
-	/* case CTRL_KEY('c'): */
-	/* 	refresh_screen(); */
-	/* 	break; */
 	}
 }
 
 /*
- * placeholder for 'void draw(str_buf_t*)' that will be implemented and handle all
+ * placeholder for 'void draw(struct str_buf*)' that will be implemented and handle all
  * drawing (eventually).
  */
-void draw_tildes_buf(str_buf_t *sb) {
+void draw_tildes_buf(struct str_buf *sb)
+{
 	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
 		if (i == EDITOR_CONFIG.rows / 3) {
 			char motd[80];
@@ -62,16 +61,17 @@ void draw_tildes_buf(str_buf_t *sb) {
  * 'refresh_screen' calls the draw function and resets the cursor's position
  * to the top right of the terminal.
  */
-void refresh_screen(void) {
-	str_buf_t sb = BUF_INIT;
+void refresh_screen(void)
+{
+	struct str_buf sb = BUF_INIT;
 
-	str_buf_append(&sb, "\x1b[?25l", 6); /* Hide cursor */
-	str_buf_append(&sb, "\x1b[H", 3); /* Reset cursor position */
+	str_buf_append(&sb, "\x1b[?25l", 6);	/* Hide cursor */
+	str_buf_append(&sb, "\x1b[H", 3);	/* Reset cursor position */
 
 	draw_tildes_buf(&sb);
 
-	str_buf_append(&sb, "\x1b[H", 3); /* Reset cursor position */
-	str_buf_append(&sb, "\x1b[?25h", 6); /* Show cursor */
+	str_buf_append(&sb, "\x1b[H", 3);	/* Reset cursor position */
+	str_buf_append(&sb, "\x1b[?25h", 6);	/* Show cursor */
 
 	write(STDOUT_FILENO, sb.buf, sb.len);
 	str_buf_free(&sb);

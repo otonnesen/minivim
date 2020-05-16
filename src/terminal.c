@@ -13,13 +13,16 @@
 #include <unistd.h>
 
 /* Resets terminal to default */
-static void disable_raw_mode(void) {
-	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &EDITOR_CONFIG.orig_termios) == -1)
+static void disable_raw_mode(void)
+{
+	if (tcsetattr(STDIN_FILENO, TCSAFLUSH, &EDITOR_CONFIG.orig_termios) ==
+			-1)
 		die("tcsetattr");
 }
 
 /* Sets terminal to non-canonical mode */
-void enable_raw_mode(void) {
+void enable_raw_mode(void)
+{
 	if (tcgetattr(STDIN_FILENO, &EDITOR_CONFIG.orig_termios) == -1)
 		die("tcgetattr");
 

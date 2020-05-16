@@ -8,7 +8,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-void str_buf_append(str_buf_t *sb, const char *s, int len) {
+void str_buf_append(struct str_buf *sb, const char *s, int len)
+{
 	char *new = realloc(sb->buf, sb->len + len);
 
 	if (new == NULL)
@@ -19,6 +20,7 @@ void str_buf_append(str_buf_t *sb, const char *s, int len) {
 	sb->len += len;
 }
 
-void str_buf_free(str_buf_t *sb) {
+void str_buf_free(struct str_buf *sb)
+{
 	free(sb->buf);
 }

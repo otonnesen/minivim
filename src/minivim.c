@@ -6,8 +6,8 @@
 #include "editor.h"
 #include "terminal.h"
 
-
-int main(void) {
+int main(void)
+{
 	enable_raw_mode();
 	init_config();
 
