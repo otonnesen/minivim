@@ -12,8 +12,8 @@ struct editor_config {
 	int cx, cy;
 	int rows;
 	int cols;
-	int text_num_rows;
-	struct editor_row row;
+	int num_lines;
+	struct editor_row *lines;
 	struct termios orig_termios;
 };
 

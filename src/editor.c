@@ -100,6 +100,24 @@ static void draw_tildes_buf(struct str_buf *sb)
 	str_buf_append(sb, "~", 1);
 }
 
+static void draw(struct str_buf *sb)
+{
+	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
+		if (i >= EDITOR_CONFIG.num_lines) {
+			str_buf_append(sb, "~", 1);
+		} else {
+			int len = EDITOR_CONFIG.lines[i].size;
+			if (len > EDITOR_CONFIG.cols)
+				len = EDITOR_CONFIG.cols;
+			str_buf_append(sb, EDITOR_CONFIG.lines[i].chars, len);
+		}
+
+		str_buf_append(sb, "\x1b[K", 3);
+		if (i < EDITOR_CONFIG.rows - 1)
+			str_buf_append(sb, "\r\n", 2);
+	}
+}
+
 /*
  * 'refresh_screen' calls the draw function and resets the cursor's position
  * to the top right of the terminal.
@@ -111,7 +129,8 @@ void refresh_screen(void)
 	str_buf_append(&sb, "\x1b[?25l", 6);	/* Hide cursor */
 	str_buf_append(&sb, "\x1b[H", 3);	/* Reset cursor position */
 
-	draw_tildes_buf(&sb);
+	/* draw_tildes_buf(&sb); */
+	draw(&sb);
 
 	char buf[32];
 	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", EDITOR_CONFIG.cy + 1,
@@ -122,4 +141,29 @@ void refresh_screen(void)
 
 	write(STDOUT_FILENO, sb.buf, sb.len);
 	str_buf_free(&sb);
+}
+
+void open_editor(void)
+{
+	EDITOR_CONFIG.lines = malloc(sizeof(struct editor_row) * 2);
+
+	char *line = "Hello, world!";
+	ssize_t line_len = 13;
+
+	EDITOR_CONFIG.lines[0].size = line_len;
+	EDITOR_CONFIG.lines[0].chars = malloc(line_len * 1);
+
+	memcpy(EDITOR_CONFIG.lines[0].chars, line, line_len);
+	EDITOR_CONFIG.lines[0].chars[line_len] = '\0';
+
+	line = "This is my string!";
+	line_len = 18;
+
+	EDITOR_CONFIG.lines[1].size = line_len;
+	EDITOR_CONFIG.lines[1].chars = malloc(line_len * 1);
+
+	memcpy(EDITOR_CONFIG.lines[1].chars, line, line_len);
+	EDITOR_CONFIG.lines[1].chars[line_len] = '\0';
+
+	EDITOR_CONFIG.num_lines = 2;
 }
