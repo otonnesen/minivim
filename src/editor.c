@@ -18,6 +18,9 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define MINIVIM_VERSION "0.0.1"
 
+/*
+ * Moves cursor with hjkl or arrow keys.
+ */
 static void move_cursor(int key)
 {
 	switch (key) {
@@ -72,37 +75,36 @@ void process_key(void)
 }
 
 /*
- * placeholder for 'void draw(struct str_buf*)' that will be implemented and handle all
- * drawing (eventually).
+ * Writes motd to the current line in sb.
  */
-static void draw_tildes_buf(struct str_buf *sb)
+static void draw_motd(struct str_buf *sb)
 {
-	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
-		if (i == EDITOR_CONFIG.rows / 3) {
-			char motd[80];
-			int l = snprintf(motd, sizeof(motd),
-					"Minivim -- version %s",
-					MINIVIM_VERSION);
-			if (l > EDITOR_CONFIG.cols)
-				l = EDITOR_CONFIG.cols;
-			int p = (EDITOR_CONFIG.cols - l) / 2;
-			str_buf_append(sb, "~", 1);
-			p--;
-			while (p--)
-				str_buf_append(sb, " ", 1);
-			str_buf_append(sb, motd, l);
-			str_buf_append(sb, "\r\n", 2);
-		} else {
-			str_buf_append(sb, "~\r\n", 3);
-		}
-		str_buf_append(sb, "\x1b[K", 3);
-	}
+	char motd[80];
+	int l = snprintf(motd, sizeof(motd), "Minivim -- version %s",
+			MINIVIM_VERSION);
+	if (l > EDITOR_CONFIG.cols)
+		l = EDITOR_CONFIG.cols;
+	int p = (EDITOR_CONFIG.cols - l) / 2;
 	str_buf_append(sb, "~", 1);
+	p--;
+	while (p--)
+		str_buf_append(sb, " ", 1);
+	str_buf_append(sb, motd, l);
+	str_buf_append(sb, "\r\n", 2);
 }
 
+/*
+ * Writes the contents of the open file to sb if one exists, otherwise writes
+ * writes the motd a third of the way down the screen.
+ */
 static void draw(struct str_buf *sb)
 {
 	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
+		if (EDITOR_CONFIG.num_lines == 0 && i == EDITOR_CONFIG.rows / 3) {
+			draw_motd(sb);
+			continue;
+		}
+
 		if (i >= EDITOR_CONFIG.num_lines) {
 			str_buf_append(sb, "~", 1);
 		} else {
@@ -143,27 +145,52 @@ void refresh_screen(void)
 	str_buf_free(&sb);
 }
 
+/*
+ * Anything that needs to be done when no file is specified can go here.
+ */
 void open_editor(void)
 {
-	EDITOR_CONFIG.lines = malloc(sizeof(struct editor_row) * 2);
+}
 
-	char *line = "Hello, world!";
-	ssize_t line_len = 13;
+/*
+ * 'append_line' takes a string and its length, and appends it to
+ * EDITOR_CONFIG.lines, reallocating as necessary.
+ */
+static void append_line(char *line, size_t len)
+{
+	EDITOR_CONFIG.lines = realloc(EDITOR_CONFIG.lines,
+			sizeof(struct editor_row) *
+			(EDITOR_CONFIG.num_lines + 1));
 
-	EDITOR_CONFIG.lines[0].size = line_len;
-	EDITOR_CONFIG.lines[0].chars = malloc(line_len * 1);
+	int line_num = EDITOR_CONFIG.num_lines;
+	EDITOR_CONFIG.lines[line_num].size = len;
 
-	memcpy(EDITOR_CONFIG.lines[0].chars, line, line_len);
-	EDITOR_CONFIG.lines[0].chars[line_len] = '\0';
+	EDITOR_CONFIG.lines[line_num].chars = malloc(len + 1);
+	memcpy(EDITOR_CONFIG.lines[line_num].chars, line, len);
+	EDITOR_CONFIG.lines[line_num].chars[len] = '\0';
 
-	line = "This is my string!";
-	line_len = 18;
+	EDITOR_CONFIG.num_lines++;
+}
 
-	EDITOR_CONFIG.lines[1].size = line_len;
-	EDITOR_CONFIG.lines[1].chars = malloc(line_len * 1);
+/*
+ * 'open_file' takes a filename string and copies its contents into the
+ * editor state struct.
+ */
+void open_file(char *filename)
+{
+	FILE *fp = fopen(filename, "r");
+	if (!fp)
+		die("fopen");
 
-	memcpy(EDITOR_CONFIG.lines[1].chars, line, line_len);
-	EDITOR_CONFIG.lines[1].chars[line_len] = '\0';
+	EDITOR_CONFIG.lines = malloc(sizeof(*EDITOR_CONFIG.lines));
 
-	EDITOR_CONFIG.num_lines = 2;
+	char line[1024];
+	for (int i = 0; fgets(line, sizeof(line), fp); i++) {
+		int len;
+		for (len = 0; line[len] != '\n' && line[len] != '\r' &&
+				line[len] != '\0' && len < 1024; len++) ;
+		append_line(line, len);
+	}
+
+	fclose(fp);
 }

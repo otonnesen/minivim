@@ -6,11 +6,15 @@
 #include "editor.h"
 #include "terminal.h"
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	enable_raw_mode();
 	init_config();
-	open_editor();
+	if (argc >= 2) {
+		open_file(argv[1]);
+	} else {
+		open_editor();
+	}
 
 	for (;;) {
 		refresh_screen();

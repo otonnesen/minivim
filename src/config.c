@@ -7,6 +7,7 @@
 
 #include "util.h"
 
+#include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
@@ -25,8 +26,18 @@ static int get_window_size(int *rows, int *cols)
 	}
 }
 
+void kill_config(void)
+{
+	for (int i = 0; i < EDITOR_CONFIG.num_lines; i++) {
+		free(EDITOR_CONFIG.lines[i].chars);
+	}
+
+	free(EDITOR_CONFIG.lines);
+}
+
 void init_config(void)
 {
 	if (get_window_size(&EDITOR_CONFIG.rows, &EDITOR_CONFIG.cols) == -1)
 		die("get_window_size");
+	atexit(kill_config);
 }
