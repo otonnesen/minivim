@@ -1,24 +1,26 @@
 CC = gcc
-CFLAGS = -O -Wall -Wextra -pedantic -std=c99
+CFLAGS = -O2 -Wall -Wextra -pedantic -std=c99
 
 TARGETS = buffer config editor keypress minivim terminal util
 
-SRC = $(patsubst %,obj/%.o,$(TARGETS))
+.PHONY: all check-style clean debug
 
-all: compile
+OBJ = $(patsubst %,obj/%.o,$(TARGETS))
+SRC = src/%.c
 
-obj/%.o: src/%.c | obj
+all: check-style minivim
+
+obj/%.o: $(SRC) | obj
 	$(CC) -c -o $@ $< $(CFLAGS)
 
 obj:
 	mkdir -p $@
 
-.PHONY: compile
+minivim: $(OBJ)
+	$(CC) -o minivim $^ $(CFLAGS)
 
-compile: $(SRC) check-style
-	$(CC) -o minivim $(SRC) $(CFLAGS)
-
-.PHONY: check-style
+debug: CFLAGS += -Og -g
+debug: minivim
 
 check-style:
 	@for file in $$(ls src); do \
@@ -29,8 +31,6 @@ check-style:
 		fi; \
 	done
 	@echo "All files passed style check."
-
-.PHONY: clean
 
 clean:
 	rm -rf obj/ minivim
