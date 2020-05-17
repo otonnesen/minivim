@@ -2,28 +2,71 @@
  * 'editor.c' implements minivim's core functionality, including drawing
  * and input handling.
  */
+
 #include "editor.h"
 
 #include "buffer.h"
 #include "config.h"
+#include "keypress.h"
 #include "util.h"
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define MINIVIM_VERSION "0.0.1"
 
+static void move_cursor(int key)
+{
+	switch (key) {
+	case 'h':
+	case ARROW_LEFT:
+		if (EDITOR_CONFIG.cx - 1 >= 0) {
+			EDITOR_CONFIG.cx--;
+		}
+		break;
+	case 'j':
+	case ARROW_DOWN:
+		if (EDITOR_CONFIG.cy + 1 < EDITOR_CONFIG.rows) {
+			EDITOR_CONFIG.cy++;
+		}
+		break;
+	case 'k':
+	case ARROW_UP:
+		if (EDITOR_CONFIG.cy - 1 >= 0) {
+			EDITOR_CONFIG.cy--;
+		}
+		break;
+	case 'l':
+	case ARROW_RIGHT:
+		if (EDITOR_CONFIG.cx + 1 < EDITOR_CONFIG.cols) {
+			EDITOR_CONFIG.cx++;
+		}
+		break;
+	}
+}
+
 /* Handle keypress */
 void process_key(void)
 {
-	char c = read_key();
+	int c = read_key();
 
 	switch (c) {
 	case CTRL_KEY('q'):
 		clear_screen();
 		exit(0);
+		break;
+	case 'h':
+	case 'j':
+	case 'k':
+	case 'l':
+	case ARROW_LEFT:
+	case ARROW_DOWN:
+	case ARROW_UP:
+	case ARROW_RIGHT:
+		move_cursor(c);
 		break;
 	}
 }
@@ -32,7 +75,7 @@ void process_key(void)
  * placeholder for 'void draw(struct str_buf*)' that will be implemented and handle all
  * drawing (eventually).
  */
-void draw_tildes_buf(struct str_buf *sb)
+static void draw_tildes_buf(struct str_buf *sb)
 {
 	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
 		if (i == EDITOR_CONFIG.rows / 3) {
@@ -70,7 +113,11 @@ void refresh_screen(void)
 
 	draw_tildes_buf(&sb);
 
-	str_buf_append(&sb, "\x1b[H", 3);	/* Reset cursor position */
+	char buf[32];
+	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", EDITOR_CONFIG.cy + 1,
+			EDITOR_CONFIG.cx + 1);
+	str_buf_append(&sb, buf, strlen(buf));	/* Move cursor to position specified in EDITOR_CONFIG */
+
 	str_buf_append(&sb, "\x1b[?25h", 6);	/* Show cursor */
 
 	write(STDOUT_FILENO, sb.buf, sb.len);

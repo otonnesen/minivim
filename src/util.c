@@ -4,7 +4,6 @@
 
 #include "util.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -23,17 +22,4 @@ void die(const char *s)
 
 	perror(s);
 	exit(1);
-}
-
-/* Read and return one keypress */
-char read_key(void)
-{
-	ssize_t nread;
-	char c;
-	while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
-		if (nread == -1 && errno != EAGAIN)
-			die("read");
-	}
-
-	return c;
 }

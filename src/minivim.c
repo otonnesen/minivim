@@ -10,6 +10,7 @@ int main(void)
 {
 	enable_raw_mode();
 	init_config();
+	open_editor();
 
 	for (;;) {
 		refresh_screen();

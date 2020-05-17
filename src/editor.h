@@ -3,5 +3,6 @@
 
 void process_key(void);
 void refresh_screen(void);
+void open_editor(void);
 
 #endif
