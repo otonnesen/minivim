@@ -18,14 +18,44 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define MINIVIM_VERSION "0.0.1"
 
-static void scroll(int lines)
+static void scroll(int vert, int hor)
 {
-	E.row_offset += lines;
+	E.row_offset += vert;
 
 	if (E.row_offset < 0)
 		E.row_offset = 0;
-	else if (E.row_offset > E.num_lines)
+	else if (E.row_offset >= E.num_lines)
 		E.row_offset = E.num_lines - 1;
+
+	E.col_offset += hor;
+
+	if (E.col_offset < 0)
+		E.col_offset = 0;
+	else if (E.col_offset >= E.lines[E.cy + E.row_offset].size
+			&& E.lines[E.cy + E.row_offset].size > 0)
+		E.col_offset = E.lines[E.cy + E.row_offset].size - 1;
+}
+
+static void fix_cursor(void)
+{
+	if (E.cy < 0) {
+		scroll(-1, 0);
+		E.cy = 0;
+	} else if (E.cy >= E.num_lines) {
+		scroll(1, 0);
+		E.cy = E.num_lines - 1;
+	}
+
+	if (E.cx < 0) {
+		scroll(0, -1);
+		E.cx = 0;
+	} else if (E.cx + E.col_offset >= E.lines[E.cy + E.row_offset].size) {
+		E.cx = E.lines[E.cy + E.row_offset].size - E.col_offset - 1;
+		/* TODO: Make tabs count as 8 characters instead of 1 */
+	} else if (E.cx >= E.cols) {
+		scroll(0, 1);
+		E.cx = E.cols - 1;
+	}
 }
 
 /*
@@ -37,33 +67,23 @@ static void move_cursor(int key)
 	switch (key) {
 	case 'h':
 	case ARROW_LEFT:
-		if (E.cx > 0)
-			E.cx--;
+		E.cx--;
 		break;
 	case 'j':
 	case ARROW_DOWN:
-		if (E.cy < E.num_lines - 1)
-			E.cy++;
+		E.cy++;
 		break;
 	case 'k':
 	case ARROW_UP:
-		if (E.row_offset > 0)
-			E.cy--;
+		E.cy--;
 		break;
 	case 'l':
 	case ARROW_RIGHT:
-		if (E.cx < E.cols - 1)
-			E.cx++;
+		E.cx++;
 		break;
 	}
 
-	if (E.cy < 0) {
-		scroll(-1);
-		E.cy = 0;
-	} else if (E.cy >= E.rows) {
-		scroll(1);
-		E.cy = E.rows - 1;
-	}
+	fix_cursor();
 }
 
 /* Handle keypress */
@@ -77,16 +97,16 @@ void process_key(void)
 		exit(0);
 		break;
 	case CTRL_KEY('e'):
-		scroll(1);
+		scroll(1, 0);
 		break;
 	case CTRL_KEY('y'):
-		scroll(-1);
+		scroll(-1, 0);
 		break;
 	case CTRL_KEY('d'):
-		scroll(E.rows / 2);
+		scroll(E.rows / 2, 0);
 		break;
 	case CTRL_KEY('u'):
-		scroll(-1 * E.rows / 2);
+		scroll(-1 * E.rows / 2, 0);
 		break;
 	case 'H':
 		E.cy = 0;
@@ -96,6 +116,12 @@ void process_key(void)
 		break;
 	case 'L':
 		E.cy = E.rows - 1;
+		break;
+	case '^':
+		E.cx = 0;
+		break;
+	case '$':
+		E.cx = E.cols - 1;
 		break;
 	case 'h':
 	case 'j':
@@ -130,9 +156,22 @@ static void draw_motd(struct str_buf *sb)
 	str_buf_append(sb, "\r\n", 2);
 }
 
+static void draw_debug(struct str_buf *sb)
+{
+	char msg[80];
+	int linelen = E.lines[E.cy + E.row_offset].size;
+	int l = snprintf(msg, sizeof(msg),
+			"DEBUG: linelen: %d, E.cx: %d, E.cols: %d, E.col_offset: %d",
+			linelen, E.cx, E.cols, E.col_offset);
+	if (l > E.cols)
+		l = E.cols;
+	str_buf_append(sb, msg, l);
+	str_buf_append(sb, "\x1b[K", 3);
+}
+
 /*
  * Writes the contents of the open file to sb if one exists, otherwise writes
- * writes the motd a third of the way down the screen.
+ * the motd a third of the way down the screen.
  */
 static void draw(struct str_buf *sb)
 {
@@ -144,18 +183,20 @@ static void draw(struct str_buf *sb)
 			continue;
 		}
 
+		if (i == E.rows - 1) {
+			draw_debug(sb);
+			continue;
+		}
+
 		if (text_line >= E.num_lines) {
 			str_buf_append(sb, "~", 1);
 		} else {
-			int len = E.lines[text_line].size;
+			int len = E.lines[text_line].size - E.col_offset;
 			if (len > E.cols)
 				len = E.cols;
 			str_buf_append(sb, E.lines[text_line]
-					.chars, len);
-			/*
-			 * TODO: Handle line wrapping better instead of just
-			 * truncating the long lines.
-			 */
+					.chars + E.col_offset, len);
+			/* TODO: Wrap lines instead of truncating. */
 		}
 
 		str_buf_append(sb, "\x1b[K", 3);
