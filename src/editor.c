@@ -88,6 +88,15 @@ void process_key(void)
 	case CTRL_KEY('u'):
 		scroll(-1 * EDITOR_CONFIG.rows / 2);
 		break;
+	case 'H':
+		EDITOR_CONFIG.cy = 0;
+		break;
+	case 'M':
+		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows / 2;
+		break;
+	case 'L':
+		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows - 1;
+		break;
 	case 'h':
 	case 'j':
 	case 'k':
