@@ -10,6 +10,7 @@ struct editor_row {
 
 struct editor_config {
 	int cx, cy;
+	int row_offset;
 	int rows;
 	int cols;
 	int num_lines;

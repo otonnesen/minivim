@@ -18,36 +18,51 @@
 #define CTRL_KEY(k) ((k) & 0x1f)
 #define MINIVIM_VERSION "0.0.1"
 
+static void scroll(int lines)
+{
+	EDITOR_CONFIG.row_offset += lines;
+
+	if (EDITOR_CONFIG.row_offset < 0)
+		EDITOR_CONFIG.row_offset = 0;
+	else if (EDITOR_CONFIG.row_offset > EDITOR_CONFIG.num_lines)
+		EDITOR_CONFIG.row_offset = EDITOR_CONFIG.num_lines - 1;
+}
+
 /*
- * Moves cursor with hjkl or arrow keys.
+ * Moves the cursor with hjkl or arrow keys. Changes EDITOR_CONFIG.row_offset
+ * if the cursor moves off the screen.
  */
 static void move_cursor(int key)
 {
 	switch (key) {
 	case 'h':
 	case ARROW_LEFT:
-		if (EDITOR_CONFIG.cx - 1 >= 0) {
+		if (EDITOR_CONFIG.cx > 0)
 			EDITOR_CONFIG.cx--;
-		}
 		break;
 	case 'j':
 	case ARROW_DOWN:
-		if (EDITOR_CONFIG.cy + 1 < EDITOR_CONFIG.rows) {
+		if (EDITOR_CONFIG.cy < EDITOR_CONFIG.num_lines - 1)
 			EDITOR_CONFIG.cy++;
-		}
 		break;
 	case 'k':
 	case ARROW_UP:
-		if (EDITOR_CONFIG.cy - 1 >= 0) {
+		if (EDITOR_CONFIG.row_offset > 0)
 			EDITOR_CONFIG.cy--;
-		}
 		break;
 	case 'l':
 	case ARROW_RIGHT:
-		if (EDITOR_CONFIG.cx + 1 < EDITOR_CONFIG.cols) {
+		if (EDITOR_CONFIG.cx < EDITOR_CONFIG.cols - 1)
 			EDITOR_CONFIG.cx++;
-		}
 		break;
+	}
+
+	if (EDITOR_CONFIG.cy < 0) {
+		scroll(-1);
+		EDITOR_CONFIG.cy = 0;
+	} else if (EDITOR_CONFIG.cy >= EDITOR_CONFIG.rows) {
+		scroll(1);
+		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows - 1;
 	}
 }
 
@@ -60,6 +75,18 @@ void process_key(void)
 	case CTRL_KEY('q'):
 		clear_screen();
 		exit(0);
+		break;
+	case CTRL_KEY('e'):
+		scroll(1);
+		break;
+	case CTRL_KEY('y'):
+		scroll(-1);
+		break;
+	case CTRL_KEY('d'):
+		scroll(EDITOR_CONFIG.rows / 2);
+		break;
+	case CTRL_KEY('u'):
+		scroll(-1 * EDITOR_CONFIG.rows / 2);
 		break;
 	case 'h':
 	case 'j':
@@ -90,6 +117,7 @@ static void draw_motd(struct str_buf *sb)
 	while (p--)
 		str_buf_append(sb, " ", 1);
 	str_buf_append(sb, motd, l);
+	str_buf_append(sb, "\x1b[K", 3);
 	str_buf_append(sb, "\r\n", 2);
 }
 
@@ -100,18 +128,25 @@ static void draw_motd(struct str_buf *sb)
 static void draw(struct str_buf *sb)
 {
 	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
+		str_buf_append(sb, "\x1b[2K", 4);
+		int text_line = i + EDITOR_CONFIG.row_offset;
 		if (EDITOR_CONFIG.num_lines == 0 && i == EDITOR_CONFIG.rows / 3) {
 			draw_motd(sb);
 			continue;
 		}
 
-		if (i >= EDITOR_CONFIG.num_lines) {
+		if (text_line >= EDITOR_CONFIG.num_lines) {
 			str_buf_append(sb, "~", 1);
 		} else {
-			int len = EDITOR_CONFIG.lines[i].size;
+			int len = EDITOR_CONFIG.lines[text_line].size;
 			if (len > EDITOR_CONFIG.cols)
 				len = EDITOR_CONFIG.cols;
-			str_buf_append(sb, EDITOR_CONFIG.lines[i].chars, len);
+			str_buf_append(sb, EDITOR_CONFIG.lines[text_line]
+					.chars, len);
+			/*
+			 * TODO: Handle line wrapping better instead of just
+			 * truncating the long lines.
+			 */
 		}
 
 		str_buf_append(sb, "\x1b[K", 3);
@@ -131,7 +166,6 @@ void refresh_screen(void)
 	str_buf_append(&sb, "\x1b[?25l", 6);	/* Hide cursor */
 	str_buf_append(&sb, "\x1b[H", 3);	/* Reset cursor position */
 
-	/* draw_tildes_buf(&sb); */
 	draw(&sb);
 
 	char buf[32];
