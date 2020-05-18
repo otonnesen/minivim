@@ -20,16 +20,16 @@
 
 static void scroll(int lines)
 {
-	EDITOR_CONFIG.row_offset += lines;
+	E.row_offset += lines;
 
-	if (EDITOR_CONFIG.row_offset < 0)
-		EDITOR_CONFIG.row_offset = 0;
-	else if (EDITOR_CONFIG.row_offset > EDITOR_CONFIG.num_lines)
-		EDITOR_CONFIG.row_offset = EDITOR_CONFIG.num_lines - 1;
+	if (E.row_offset < 0)
+		E.row_offset = 0;
+	else if (E.row_offset > E.num_lines)
+		E.row_offset = E.num_lines - 1;
 }
 
 /*
- * Moves the cursor with hjkl or arrow keys. Changes EDITOR_CONFIG.row_offset
+ * Moves the cursor with hjkl or arrow keys. Changes E.row_offset
  * if the cursor moves off the screen.
  */
 static void move_cursor(int key)
@@ -37,32 +37,32 @@ static void move_cursor(int key)
 	switch (key) {
 	case 'h':
 	case ARROW_LEFT:
-		if (EDITOR_CONFIG.cx > 0)
-			EDITOR_CONFIG.cx--;
+		if (E.cx > 0)
+			E.cx--;
 		break;
 	case 'j':
 	case ARROW_DOWN:
-		if (EDITOR_CONFIG.cy < EDITOR_CONFIG.num_lines - 1)
-			EDITOR_CONFIG.cy++;
+		if (E.cy < E.num_lines - 1)
+			E.cy++;
 		break;
 	case 'k':
 	case ARROW_UP:
-		if (EDITOR_CONFIG.row_offset > 0)
-			EDITOR_CONFIG.cy--;
+		if (E.row_offset > 0)
+			E.cy--;
 		break;
 	case 'l':
 	case ARROW_RIGHT:
-		if (EDITOR_CONFIG.cx < EDITOR_CONFIG.cols - 1)
-			EDITOR_CONFIG.cx++;
+		if (E.cx < E.cols - 1)
+			E.cx++;
 		break;
 	}
 
-	if (EDITOR_CONFIG.cy < 0) {
+	if (E.cy < 0) {
 		scroll(-1);
-		EDITOR_CONFIG.cy = 0;
-	} else if (EDITOR_CONFIG.cy >= EDITOR_CONFIG.rows) {
+		E.cy = 0;
+	} else if (E.cy >= E.rows) {
 		scroll(1);
-		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows - 1;
+		E.cy = E.rows - 1;
 	}
 }
 
@@ -83,19 +83,19 @@ void process_key(void)
 		scroll(-1);
 		break;
 	case CTRL_KEY('d'):
-		scroll(EDITOR_CONFIG.rows / 2);
+		scroll(E.rows / 2);
 		break;
 	case CTRL_KEY('u'):
-		scroll(-1 * EDITOR_CONFIG.rows / 2);
+		scroll(-1 * E.rows / 2);
 		break;
 	case 'H':
-		EDITOR_CONFIG.cy = 0;
+		E.cy = 0;
 		break;
 	case 'M':
-		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows / 2;
+		E.cy = E.rows / 2;
 		break;
 	case 'L':
-		EDITOR_CONFIG.cy = EDITOR_CONFIG.rows - 1;
+		E.cy = E.rows - 1;
 		break;
 	case 'h':
 	case 'j':
@@ -118,9 +118,9 @@ static void draw_motd(struct str_buf *sb)
 	char motd[80];
 	int l = snprintf(motd, sizeof(motd), "Minivim -- version %s",
 			MINIVIM_VERSION);
-	if (l > EDITOR_CONFIG.cols)
-		l = EDITOR_CONFIG.cols;
-	int p = (EDITOR_CONFIG.cols - l) / 2;
+	if (l > E.cols)
+		l = E.cols;
+	int p = (E.cols - l) / 2;
 	str_buf_append(sb, "~", 1);
 	p--;
 	while (p--)
@@ -136,21 +136,21 @@ static void draw_motd(struct str_buf *sb)
  */
 static void draw(struct str_buf *sb)
 {
-	for (int i = 0; i < EDITOR_CONFIG.rows; i++) {
+	for (int i = 0; i < E.rows; i++) {
 		str_buf_append(sb, "\x1b[2K", 4);
-		int text_line = i + EDITOR_CONFIG.row_offset;
-		if (EDITOR_CONFIG.num_lines == 0 && i == EDITOR_CONFIG.rows / 3) {
+		int text_line = i + E.row_offset;
+		if (E.num_lines == 0 && i == E.rows / 3) {
 			draw_motd(sb);
 			continue;
 		}
 
-		if (text_line >= EDITOR_CONFIG.num_lines) {
+		if (text_line >= E.num_lines) {
 			str_buf_append(sb, "~", 1);
 		} else {
-			int len = EDITOR_CONFIG.lines[text_line].size;
-			if (len > EDITOR_CONFIG.cols)
-				len = EDITOR_CONFIG.cols;
-			str_buf_append(sb, EDITOR_CONFIG.lines[text_line]
+			int len = E.lines[text_line].size;
+			if (len > E.cols)
+				len = E.cols;
+			str_buf_append(sb, E.lines[text_line]
 					.chars, len);
 			/*
 			 * TODO: Handle line wrapping better instead of just
@@ -159,7 +159,7 @@ static void draw(struct str_buf *sb)
 		}
 
 		str_buf_append(sb, "\x1b[K", 3);
-		if (i < EDITOR_CONFIG.rows - 1)
+		if (i < E.rows - 1)
 			str_buf_append(sb, "\r\n", 2);
 	}
 }
@@ -178,9 +178,8 @@ void refresh_screen(void)
 	draw(&sb);
 
 	char buf[32];
-	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", EDITOR_CONFIG.cy + 1,
-			EDITOR_CONFIG.cx + 1);
-	str_buf_append(&sb, buf, strlen(buf));	/* Move cursor to position specified in EDITOR_CONFIG */
+	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
+	str_buf_append(&sb, buf, strlen(buf));	/* Move cursor to position specified in E */
 
 	str_buf_append(&sb, "\x1b[?25h", 6);	/* Show cursor */
 
@@ -197,22 +196,21 @@ void open_editor(void)
 
 /*
  * 'append_line' takes a string and its length, and appends it to
- * EDITOR_CONFIG.lines, reallocating as necessary.
+ * E.lines, reallocating as necessary.
  */
 static void append_line(char *line, size_t len)
 {
-	EDITOR_CONFIG.lines = realloc(EDITOR_CONFIG.lines,
-			sizeof(struct editor_row) *
-			(EDITOR_CONFIG.num_lines + 1));
+	E.lines = realloc(E.lines,
+			sizeof(struct editor_row) * (E.num_lines + 1));
 
-	int line_num = EDITOR_CONFIG.num_lines;
-	EDITOR_CONFIG.lines[line_num].size = len;
+	int line_num = E.num_lines;
+	E.lines[line_num].size = len;
 
-	EDITOR_CONFIG.lines[line_num].chars = malloc(len + 1);
-	memcpy(EDITOR_CONFIG.lines[line_num].chars, line, len);
-	EDITOR_CONFIG.lines[line_num].chars[len] = '\0';
+	E.lines[line_num].chars = malloc(len + 1);
+	memcpy(E.lines[line_num].chars, line, len);
+	E.lines[line_num].chars[len] = '\0';
 
-	EDITOR_CONFIG.num_lines++;
+	E.num_lines++;
 }
 
 /*
@@ -225,7 +223,7 @@ void open_file(char *filename)
 	if (!fp)
 		die("fopen");
 
-	EDITOR_CONFIG.lines = malloc(sizeof(*EDITOR_CONFIG.lines));
+	E.lines = malloc(sizeof(*E.lines));
 
 	char line[1024];
 	for (int i = 0; fgets(line, sizeof(line), fp); i++) {

@@ -19,7 +19,7 @@ struct editor_config {
 };
 
 /* Global state variable */
-extern struct editor_config EDITOR_CONFIG;
+extern struct editor_config E;
 
 void init_config(void);
 
